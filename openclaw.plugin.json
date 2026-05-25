@@ -1,0 +1,22 @@
+{
+  "id": "mcp-memory",
+  "name": "MCP Memory Service",
+  "description": "Memória persistente com busca híbrida, knowledge graph e mistake notes",
+  "version": "0.1.0",
+  "kind": "memory",
+  "contracts": {
+    "tools": ["memory_store", "memory_search", "memory_forget", "memory_stats"]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "model": { "type": "string", "default": "local" },
+      "threshold": { "type": "number", "default": 0.7 },
+      "maxResults": { "type": "integer", "default": 5 },
+      "autoCapture": { "type": "boolean", "default": true },
+      "autoRecall": { "type": "boolean", "default": true },
+      "graphEnabled": { "type": "boolean", "default": false }
+    }
+  }
+}
