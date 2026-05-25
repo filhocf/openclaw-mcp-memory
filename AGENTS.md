@@ -69,3 +69,31 @@ vitest run              # Todos os testes
 vitest --coverage       # Com cobertura
 eslint src/             # Lint
 ```
+
+## Lessons Learned (Plugin SDK)
+
+### Runtime vs TypeScript
+
+O SDK do OpenClaw aceita objetos que não passam no type checking estrito:
+- Tools usam `execute()`, não `handler()` (AnyAgentTool vs Tool são tipos diferentes)
+- registerHook exige terceiro argumento `opts.name`
+- **Sempre inspecionar os logs do gateway** após carregar — TypeScript não pega esses erros
+
+### ClawHub Publish
+
+- Entry point deve ser `.js` compilado (TypeScript não é aceito)
+- Versionar `dist/` no git (remover do .gitignore)
+- v0.1.0 → v0.1.4: leve 4 tentativas até acertar todos os requisitos
+
+### Native Dependencies
+
+- better-sqlite3 e sharp precisam de `npm rebuild` após `clawhub install`
+- O clawhub não roda scripts de pós-instalação para módulos nativos
+- Dev deps problemáticas (@vitest/coverage-v8) quebram o npm install do clawhub — manter minimalistas
+
+### Recomendação para Publicação
+
+1. Testar instalando localmente antes de publicar (`clawhub pack` + copiar manualmente)
+2. Verificar logs do gateway: `journalctl -u openclaw-gateway.service | grep -i mcp-memory`
+3. Se usa módulo nativo, rodar `npm rebuild <pkg>` no diretório de extensão
+4. Quality Gate deve incluir etapa de validação de instalação
