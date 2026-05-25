@@ -1,42 +1,19 @@
-import type { Tool } from "openclaw/plugin-sdk/tool";
 import { getStorage } from "../storage/sqlite.js";
 
-export const memoryForgetTool: Tool = {
+export const memoryForgetTool = {
   name: "memory_forget",
-  description:
-    "Remove uma memória específica pelo content_hash (retornado por memory_store) ou pelo id interno.",
+  description: "Remove uma memória específica pelo content_hash.",
   parameters: {
     type: "object",
     properties: {
-      content_hash: {
-        type: "string",
-        description: "Hash SHA-256 da memória a remover (16 chars hex). Retornado por memory_store.",
-      },
-      id: {
-        type: "string",
-        description: "UUID interno da memória a remover (alternativa ao content_hash).",
-      },
+      content_hash: { type: "string", description: "Hash SHA-256 (16 hex chars) da memória a remover" },
     },
-    oneOf: [{ required: ["content_hash"] }, { required: ["id"] }],
+    required: ["content_hash"],
   },
-  handler: async (args, ctx) => {
-    const storage = getStorage();
-    const hash = args.content_hash ? String(args.content_hash) : null;
-    const id = args.id ? String(args.id) : null;
-
-    let deleted = false;
-
-    if (hash) {
-      deleted = storage.deleteByHash(hash);
-      ctx.logger?.info?.(`[memory_forget] by hash=${hash} found=${deleted}`);
-    } else if (id) {
-      deleted = storage.deleteById(id);
-      ctx.logger?.info?.(`[memory_forget] by id=${id} found=${deleted}`);
-    }
-
-    return {
-      success: deleted,
-      message: deleted ? "Memória removida." : "Memória não encontrada.",
-    };
+  execute: async (_toolCallId: string, args: unknown) => {
+    const p = args as Record<string, unknown>;
+    const hash = String(p.content_hash);
+    const deleted = getStorage().deleteByHash(hash);
+    return { success: deleted, data: { deleted } };
   },
 };

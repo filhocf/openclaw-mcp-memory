@@ -28,33 +28,20 @@ export function createMemoryStoreTool(config) {
             },
             required: ["content"],
         },
-        handler: async (args, ctx) => {
-            const content = String(args.content);
-            const tags = Array.isArray(args.tags) ? args.tags.map(String) : [];
-            const memoryType = typeof args.memory_type === "string" ? args.memory_type : "fact";
-            const metadata = args.metadata && typeof args.metadata === "object" ? args.metadata : {};
-            // Generate embedding (best-effort — might fail if model not loaded)
+        execute: async (_toolCallId, args) => {
+            const p = args;
+            const content = String(p.content);
+            const tags = Array.isArray(p.tags) ? p.tags.map(String) : [];
+            const memoryType = typeof p.memory_type === "string" ? p.memory_type : "fact";
+            const metadata = p.metadata && typeof p.metadata === "object" ? p.metadata : {};
             let emb = null;
             try {
                 emb = await embed(content);
             }
-            catch (err) {
-                ctx.logger?.warn?.("[memory_store] embed failed, storing without vector:", err);
-            }
+            catch { /* store without vector */ }
             const storage = getStorage();
-            const result = storage.insert(content, {
-                tags,
-                memoryType,
-                metadata,
-                embedding: emb,
-            });
-            ctx.logger?.info?.(`[memory_store] stored "${content.slice(0, 60)}..." type=${memoryType} hash=${result.content_hash} existed=${result.alreadyExisted}`);
-            return {
-                success: true,
-                id: result.id,
-                content_hash: result.content_hash,
-                alreadyExisted: result.alreadyExisted,
-            };
+            const result = storage.insert(content, { tags, memoryType, metadata, embedding: emb });
+            return { success: true, data: { id: result.id, content_hash: result.content_hash, alreadyExisted: result.alreadyExisted } };
         },
     };
 }

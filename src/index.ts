@@ -57,11 +57,11 @@ export default definePluginEntry({
       })
       .catch((err) => logger.warn("[mcp-memory] embed warmup error: " + String(err)));
 
-    // 6. Register tools
-    api.registerTool(createMemoryStoreTool(config));
-    api.registerTool(createMemorySearchTool(config));
-    api.registerTool(memoryForgetTool);
-    api.registerTool(graphStore ? createMemoryStatsTool(graphStore) : createMemoryStatsTool());
+    // 6. Register tools (cast to any — SDK aceita AnyAgentTool em runtime)
+    api.registerTool(createMemoryStoreTool(config) as any);
+    api.registerTool(createMemorySearchTool(config) as any);
+    api.registerTool(memoryForgetTool as any);
+    api.registerTool((graphStore ? createMemoryStatsTool(graphStore) : createMemoryStatsTool()) as any);
 
     // 7. Register hooks
     (api as any).registerHook("before_prompt_build", createAutoRecallHandler(config) as any, { name: "mcp-memory-auto-recall" });

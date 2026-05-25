@@ -1,9 +1,8 @@
-import type { Tool } from "openclaw/plugin-sdk/tool";
 import { getStorage } from "../storage/sqlite.js";
 import { embed } from "../storage/embeddings.js";
 import type { PluginConfig } from "../config.js";
 
-export function createMemorySearchTool(config: PluginConfig): Tool {
+export function createMemorySearchTool(config: PluginConfig) {
   return {
     name: "memory_search",
     description:
@@ -12,49 +11,24 @@ export function createMemorySearchTool(config: PluginConfig): Tool {
     parameters: {
       type: "object",
       properties: {
-        query: {
-          type: "string",
-          description: "Texto para busca semântica",
-        },
-        limit: {
-          type: "integer",
-          default: config.maxResults,
-          description: "Número máximo de resultados (default: configurado no plugin)",
-        },
-        threshold: {
-          type: "number",
-          default: config.threshold,
-          description: "Score mínimo de relevância (0–1, default: configurado no plugin)",
-        },
+        query: { type: "string", description: "Texto para busca semântica" },
+        limit: { type: "integer", default: config.maxResults, description: "Número máximo de resultados" },
+        threshold: { type: "number", default: config.threshold, description: "Score mínimo (0–1)" },
       },
       required: ["query"],
     },
-    handler: async (args, ctx) => {
-      const query = String(args.query);
-      const limit = typeof args.limit === "number" ? Math.max(1, Math.floor(args.limit)) : config.maxResults;
-      const threshold = typeof args.threshold === "number" ? args.threshold : config.threshold;
-
+    execute: async (_toolCallId: string, args: unknown) => {
+      const p = args as Record<string, unknown>;
+      const query = String(p.query);
+      const limit = typeof p.limit === "number" ? Math.max(1, Math.floor(p.limit)) : config.maxResults;
+      const threshold = typeof p.threshold === "number" ? p.threshold : config.threshold;
       const storage = getStorage();
 
-      // Generate embedding for semantic search (best-effort)
       let queryEmbedding: Float32Array | null = null;
-      try {
-        queryEmbedding = await embed(query);
-      } catch (err) {
-        ctx.logger?.warn?.("[memory_search] embed failed, falling back to keyword-only:", err);
-      }
+      try { queryEmbedding = await embed(query); } catch { /* keyword-only fallback */ }
 
       const results = storage.hybridSearch(query, queryEmbedding, limit, threshold);
-
-      ctx.logger?.info?.(
-        `[memory_search] query="${query.slice(0, 50)}..." results=${results.length} has_vector=${queryEmbedding !== null}`,
-      );
-
-      return {
-        query,
-        results,
-        total: results.length,
-      };
+      return { success: true, data: { query, results, total: results.length } };
     },
   };
 }

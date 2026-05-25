@@ -1,38 +1,23 @@
-import type { Tool } from "openclaw/plugin-sdk/tool";
 import { getStorage } from "../storage/sqlite.js";
 import type { GraphStore } from "../storage/graph.js";
 
-export function createMemoryStatsTool(graphStore?: GraphStore): Tool {
+let _graphStore: GraphStore | undefined;
+
+export function setStatsGraphStore(gs: GraphStore | undefined): void {
+  _graphStore = gs;
+}
+
+export function createMemoryStatsTool(graphStore?: GraphStore) {
+  _graphStore = graphStore;
   return {
     name: "memory_stats",
-    description:
-      "Retorna estatísticas da memória: total de registros, distribuição por tipo, " +
-      "registros recentes (7 dias), e estatísticas do knowledge graph (se habilitado).",
-    parameters: {
-      type: "object",
-      properties: {},
-    },
-    handler: async (_args, ctx) => {
+    description: "Retorna estatísticas da memória: total, por tipo, recentes, e (se ativo) do grafo de conhecimento.",
+    parameters: { type: "object", properties: {} },
+    execute: async () => {
       const storage = getStorage();
-      const memStats = storage.stats();
-
-      let graphStats = null;
-      if (graphStore) {
-        try {
-          graphStats = graphStore.stats();
-        } catch (err) {
-          ctx.logger?.warn?.("[memory_stats] graph stats unavailable:", err);
-        }
-      }
-
-      ctx.logger?.info?.(
-        `[memory_stats] total=${memStats.total} types=${Object.keys(memStats.byType).length}`,
-      );
-
-      return {
-        memories: memStats,
-        graph: graphStats,
-      };
+      const stats = storage.stats();
+      const graphStats = _graphStore ? _graphStore.stats() : undefined;
+      return { success: true, data: { ...stats, graph: graphStats } };
     },
   };
 }
