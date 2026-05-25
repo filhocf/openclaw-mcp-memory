@@ -100,6 +100,11 @@ export class MemoryStorage {
     `);
   }
 
+  /** Expose the underlying Database for GraphStore (same connection, same WAL). */
+  get rawDb(): Database.Database {
+    return this.db;
+  }
+
   close(): void {
     this.db.close();
   }

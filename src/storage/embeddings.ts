@@ -14,9 +14,17 @@ type FeatureExtractionPipeline = (
   options?: { pooling?: string; normalize?: boolean },
 ) => Promise<{ data: Float32Array; dims: number[] }>;
 
+type Logger = { info: (msg: string) => void; warn: (msg: string) => void; error: (msg: string) => void };
+
 let _pipeline: FeatureExtractionPipeline | null = null;
+let _logger: Logger | null = null;
 
 const MODEL = "Xenova/all-MiniLM-L6-v2";
+
+/** Inject a logger (called once at plugin init). */
+export function setEmbedLogger(logger: Logger): void {
+  _logger = logger;
+}
 
 /**
  * Get or lazy-init the embedding pipeline.
@@ -25,14 +33,13 @@ const MODEL = "Xenova/all-MiniLM-L6-v2";
 async function getPipeline(): Promise<FeatureExtractionPipeline | null> {
   if (_pipeline) return _pipeline;
   try {
-    // pipeline("feature-extraction", ...) returns a function
     _pipeline = (await pipeline(
       "feature-extraction" as PipelineType,
       MODEL,
     )) as unknown as FeatureExtractionPipeline;
     return _pipeline;
   } catch (err) {
-    console.error("[mcp-memory:embeddings] failed to init pipeline:", err);
+    _logger?.error(`[embeddings] failed to init pipeline: ${err}`);
     return null;
   }
 }
@@ -48,7 +55,7 @@ export async function embed(text: string): Promise<Float32Array | null> {
     const output = await pipe(text, { pooling: "mean", normalize: true });
     return new Float32Array(output.data);
   } catch (err) {
-    console.error("[mcp-memory:embeddings] embed failed:", err);
+    _logger?.error(`[embeddings] embed failed: ${err}`);
     return null;
   }
 }
