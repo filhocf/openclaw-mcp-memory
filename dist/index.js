@@ -56,10 +56,9 @@ export default definePluginEntry({
         api.registerTool(memoryForgetTool);
         api.registerTool(graphStore ? createMemoryStatsTool(graphStore) : createMemoryStatsTool());
         // 7. Register hooks
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        api.registerHook("before_prompt_build", createAutoRecallHandler(config));
-        api.registerHook("after_tool_call", createAutoCaptureHandler(config));
-        api.registerHook("session_end", createSessionEndHandler(config));
+        api.registerHook("before_prompt_build", createAutoRecallHandler(config), { name: "mcp-memory-auto-recall" });
+        api.registerHook("after_tool_call", createAutoCaptureHandler(config), { name: "mcp-memory-auto-capture" });
+        api.registerHook("session_end", createSessionEndHandler(config), { name: "mcp-memory-session-end" });
         logger.info("[mcp-memory] plugin loaded — 4 tools, 3 hooks" +
             ", auto-capture=" + config.autoCapture +
             ", auto-recall=" + config.autoRecall);
