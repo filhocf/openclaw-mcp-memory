@@ -1,20 +1,60 @@
 import type { Tool } from "openclaw/plugin-sdk/tool";
+import { getStorage } from "../storage/sqlite.js";
+import { embed } from "../storage/embeddings.js";
+import type { PluginConfig } from "../config.js";
 
-export const memorySearchTool: Tool = {
-  name: "memory_search",
-  description: "Busca memórias por similaridade semântica",
-  parameters: {
-    type: "object",
-    properties: {
-      query: { type: "string", description: "Texto de busca" },
-      limit: { type: "integer", default: 5 },
-      threshold: { type: "number", default: 0.7 },
+export function createMemorySearchTool(config: PluginConfig): Tool {
+  return {
+    name: "memory_search",
+    description:
+      "Busca memórias por similaridade semântica (híbrida: texto + vetor). " +
+      "Retorna resultados ranqueados por RRF (Reciprocal Rank Fusion).",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Texto para busca semântica",
+        },
+        limit: {
+          type: "integer",
+          default: config.maxResults,
+          description: "Número máximo de resultados (default: configurado no plugin)",
+        },
+        threshold: {
+          type: "number",
+          default: config.threshold,
+          description: "Score mínimo de relevância (0–1, default: configurado no plugin)",
+        },
+      },
+      required: ["query"],
     },
-    required: ["query"],
-  },
-  handler: async (args, ctx) => {
-    // TODO: implementar busca híbrida (RRF)
-    ctx.logger.info(`memory_search: ${args.query}`);
-    return { results: [] };
-  },
-};
+    handler: async (args, ctx) => {
+      const query = String(args.query);
+      const limit = typeof args.limit === "number" ? Math.max(1, Math.floor(args.limit)) : config.maxResults;
+      const threshold = typeof args.threshold === "number" ? args.threshold : config.threshold;
+
+      const storage = getStorage();
+
+      // Generate embedding for semantic search (best-effort)
+      let queryEmbedding: Float32Array | null = null;
+      try {
+        queryEmbedding = await embed(query);
+      } catch (err) {
+        ctx.logger?.warn?.("[memory_search] embed failed, falling back to keyword-only:", err);
+      }
+
+      const results = storage.hybridSearch(query, queryEmbedding, limit, threshold);
+
+      ctx.logger?.info?.(
+        `[memory_search] query="${query.slice(0, 50)}..." results=${results.length} has_vector=${queryEmbedding !== null}`,
+      );
+
+      return {
+        query,
+        results,
+        total: results.length,
+      };
+    },
+  };
+}
