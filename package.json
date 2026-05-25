@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Native OpenClaw plugin for mcp-memory-service: persistent memory with hybrid search, knowledge graph, and mistake notes",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "check": "tsc --noEmit",
@@ -13,7 +13,7 @@
   },
   "openclaw": {
     "extensions": [
-      "./src/index.ts"
+      "./dist/index.js"
     ],
     "install": {
       "npmSpec": "@filhocf/openclaw-mcp-memory",
