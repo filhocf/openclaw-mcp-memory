@@ -6,6 +6,7 @@
  */
 import { getStorage } from "../storage/sqlite.js";
 import { embed } from "../storage/embeddings.js";
+import { matchGlob } from "../glob.js";
 export function createAutoCaptureHandler(config) {
     return async (event, ctx) => {
         if (!config.autoCapture)
@@ -17,6 +18,9 @@ export function createAutoCaptureHandler(config) {
         const toolArgs = event?.arguments ?? event?.args ?? {};
         const toolResult = event?.result ?? event?.output ?? event?.response;
         if (!toolName)
+            return;
+        // Check matcher: only capture tools matching the configured pattern
+        if (!matchGlob(config.captureMatcher, toolName))
             return;
         // Don't re-capture our own memory tools
         if (toolName.startsWith("memory_"))

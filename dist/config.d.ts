@@ -9,6 +9,13 @@ export interface PluginConfig {
     autoRecall: boolean;
     graphEnabled: boolean;
     dbPath?: string;
+    /**
+     * Glob pattern for auto-capture hook.
+     * Only tool calls matching this pattern trigger auto-capture.
+     * Default: "*" (all tools).
+     * Examples: "memory_*" (only memory tools), "exec,fs_read" (specific tools)
+     */
+    captureMatcher: string;
 }
 export declare const DEFAULT_CONFIG: PluginConfig;
 /**

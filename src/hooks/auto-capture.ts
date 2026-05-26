@@ -8,6 +8,7 @@
 import type { PluginConfig } from "../config.js";
 import { getStorage } from "../storage/sqlite.js";
 import { embed } from "../storage/embeddings.js";
+import { matchGlob } from "../glob.js";
 
 interface ToolCallEvent {
   name?: string;
@@ -32,6 +33,9 @@ export function createAutoCaptureHandler(config: PluginConfig) {
     const toolResult = event?.result ?? event?.output ?? event?.response;
 
     if (!toolName) return;
+
+    // Check matcher: only capture tools matching the configured pattern
+    if (!matchGlob(config.captureMatcher, toolName)) return;
 
     // Don't re-capture our own memory tools
     if (toolName.startsWith("memory_")) return;

@@ -16,7 +16,8 @@
       "maxResults": { "type": "integer", "default": 5 },
       "autoCapture": { "type": "boolean", "default": true },
       "autoRecall": { "type": "boolean", "default": true },
-      "graphEnabled": { "type": "boolean", "default": false }
+      "graphEnabled": { "type": "boolean", "default": false },
+      "captureMatcher": { "type": "string", "default": "*", "description": "Glob pattern to filter which tools trigger auto-capture. Examples: 'memory_*', '{fs_read,exec}', '*' (all)" }
     }
   }
 }
