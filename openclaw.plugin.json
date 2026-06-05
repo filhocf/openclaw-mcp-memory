@@ -1,8 +1,8 @@
 {
   "id": "mcp-memory",
   "name": "MCP Memory Service",
-  "description": "Memória persistente com busca híbrida, knowledge graph e mistake notes",
-  "version": "0.1.0",
+  "description": "Memória persistente via thin-client HTTP para mcp-memory-service",
+  "version": "0.2.0",
   "kind": "memory",
   "contracts": {
     "tools": ["memory_store", "memory_search", "memory_forget", "memory_stats"]
@@ -11,13 +11,12 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "model": { "type": "string", "default": "local" },
+      "serviceUrl": { "type": "string", "default": "http://127.0.0.1:3202/mcp" },
       "threshold": { "type": "number", "default": 0.7 },
       "maxResults": { "type": "integer", "default": 5 },
       "autoCapture": { "type": "boolean", "default": true },
       "autoRecall": { "type": "boolean", "default": true },
-      "graphEnabled": { "type": "boolean", "default": false },
-      "captureMatcher": { "type": "string", "default": "*", "description": "Glob pattern to filter which tools trigger auto-capture. Examples: 'memory_*', '{fs_read,exec}', '*' (all)" }
+      "captureMatcher": { "type": "string", "default": "*", "description": "Glob pattern to filter which tools trigger auto-capture" }
     }
   }
 }

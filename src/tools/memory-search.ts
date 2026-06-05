@@ -1,13 +1,10 @@
-import { getStorage } from "../storage/sqlite.js";
-import { embed } from "../storage/embeddings.js";
+import type { McpClient } from "../storage/mcp-client.js";
 import type { PluginConfig } from "../config.js";
 
-export function createMemorySearchTool(config: PluginConfig) {
+export function createMemorySearchTool(client: McpClient, config: PluginConfig) {
   return {
     name: "memory_search",
-    description:
-      "Busca memórias por similaridade semântica (híbrida: texto + vetor). " +
-      "Retorna resultados ranqueados por RRF (Reciprocal Rank Fusion).",
+    description: "Busca memórias por similaridade semântica. Retorna resultados ranqueados.",
     parameters: {
       type: "object",
       properties: {
@@ -19,16 +16,13 @@ export function createMemorySearchTool(config: PluginConfig) {
     },
     execute: async (_toolCallId: string, args: unknown) => {
       const p = args as Record<string, unknown>;
-      const query = String(p.query);
-      const limit = typeof p.limit === "number" ? Math.max(1, Math.floor(p.limit)) : config.maxResults;
-      const threshold = typeof p.threshold === "number" ? p.threshold : config.threshold;
-      const storage = getStorage();
-
-      let queryEmbedding: Float32Array | null = null;
-      try { queryEmbedding = await embed(query); } catch { /* keyword-only fallback */ }
-
-      const results = storage.hybridSearch(query, queryEmbedding, limit, threshold);
-      return { success: true, data: { query, results, total: results.length } };
+      const toolArgs = {
+        query: String(p.query),
+        limit: typeof p.limit === "number" ? p.limit : config.maxResults,
+      };
+      const result = await client.callTool("memory_search", toolArgs);
+      if (result === null) return { success: true, data: { query: toolArgs.query, results: [], total: 0 } };
+      return { success: true, data: result };
     },
   };
 }

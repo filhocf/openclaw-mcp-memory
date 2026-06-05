@@ -1,7 +1,7 @@
 {
   "name": "@filhocf/openclaw-mcp-memory",
-  "version": "0.1.5",
-  "description": "Native OpenClaw plugin for mcp-memory-service: persistent memory with hybrid search, knowledge graph, and mistake notes",
+  "version": "0.2.0",
+  "description": "Native OpenClaw plugin for mcp-memory-service: thin HTTP client to persistent memory with hybrid search",
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
@@ -28,13 +28,8 @@
       "pluginSdkVersion": "2026.5.20"
     }
   },
-  "dependencies": {
-    "@xenova/transformers": "^2.17.0",
-    "better-sqlite3": "^11.0.0"
-  },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
     "eslint-plugin-import": "^2.31.0",

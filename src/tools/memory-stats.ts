@@ -1,23 +1,14 @@
-import { getStorage } from "../storage/sqlite.js";
-import type { GraphStore } from "../storage/graph.js";
+import type { McpClient } from "../storage/mcp-client.js";
 
-let _graphStore: GraphStore | undefined;
-
-export function setStatsGraphStore(gs: GraphStore | undefined): void {
-  _graphStore = gs;
-}
-
-export function createMemoryStatsTool(graphStore?: GraphStore) {
-  _graphStore = graphStore;
+export function createMemoryStatsTool(client: McpClient) {
   return {
     name: "memory_stats",
-    description: "Retorna estatísticas da memória: total, por tipo, recentes, e (se ativo) do grafo de conhecimento.",
+    description: "Retorna estatísticas da memória: total, por tipo, recentes.",
     parameters: { type: "object", properties: {} },
     execute: async () => {
-      const storage = getStorage();
-      const stats = storage.stats();
-      const graphStats = _graphStore ? _graphStore.stats() : undefined;
-      return { success: true, data: { ...stats, graph: graphStats } };
+      const result = await client.callTool("memory_health", {});
+      if (result === null) return { success: false, data: { error: "service unavailable" } };
+      return { success: true, data: result };
     },
   };
 }
